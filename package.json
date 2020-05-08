@@ -1,0 +1,28 @@
+{
+  "name": "ambus",
+  "version": "0.1.0",
+  "author": "omar.enrique1211@gmail.com",
+  "description": "Experiment about event driven apps using generators as source of events",
+  "main": "index.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc"
+  },
+  "keywords": [
+    "event",
+    "generators"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
+    "jest": "^26.0.1",
+    "ts-jest": "^25.5.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {}
+}
