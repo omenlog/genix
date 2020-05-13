@@ -25,7 +25,7 @@ type SyncCommand = {
 type Handler = {
   type: 'new-handler';
   eventName: string;
-  handlerFn: Function;
+  handlerFn: Source;
 };
 
 type NewSource = {
@@ -35,7 +35,7 @@ type NewSource = {
 };
 
 
-type RunSourceEvent = {
+type RunSource = {
   type: 'run-source';
   sourceFn: Source;
   args: any[];
@@ -47,4 +47,11 @@ export type Event_ =
   | SyncCommand
   | NewCommand
   | NewSource
-  | RunSourceEvent;
+  | RunSource;
+
+type IteratorValue<T> = {done: boolean; value: T};
+
+export type HandlerEvent = IteratorValue<Handler>;
+export type AsyncCommandEvent = IteratorValue<AsyncCommand>;
+export type RunSourceEvent = IteratorValue<RunSource>;
+export type SyncCommandEvent = IteratorValue<SyncCommand>;

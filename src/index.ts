@@ -1,5 +1,5 @@
 import {
-  Commands, Handlers, Event_, Sources, Source,
+  Commands, Event_, Sources, Source, Handlers,
 } from './types';
 
 
@@ -92,7 +92,7 @@ const syncCommand = (name: string, ...args: any[]): Event_ => ({
   args,
 });
 
-const handler = (eventName: string, handlerFn: Function): Event_ => ({
+const handler = (eventName: string, handlerFn: Source): Event_ => ({
   type: 'new-handler',
   eventName,
   handlerFn,
