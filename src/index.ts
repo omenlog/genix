@@ -76,10 +76,10 @@ function clearHandlers(): void{
 }
 
 function init(): void | never {
-  if (handlers.INIT === undefined) {
+  if (handlers.init === undefined) {
     throw new Error('Missing INIT handler');
   } else {
-    run(handlers.INIT[0]());
+    run(handlers.init[0]());
   }
 }
 
