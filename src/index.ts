@@ -1,11 +1,10 @@
 import {
-  Commands, Event_, Sources, Source, Handlers,
+  Commands, Event_, Source, Handlers,
 } from './types';
 
 
 let handlers: Handlers = {};
 const commands: Commands = {};
-const sources: Sources = {};
 
 type Output = {done?: boolean; value: Event_};
 
@@ -20,22 +19,6 @@ async function run(
 
   let result;
   switch (value.type) {
-    case 'new-command': {
-      commands[value.name] = value.commandFn;
-      break;
-    }
-    case 'sync-command': {
-      result = value.args
-        ? commands[value.name](...value.args)
-        : commands[value.name]();
-      break;
-    }
-    case 'async-command': {
-      result = value.args
-        ? await commands[value.name](...value.args)
-        : await commands[value.name]();
-      break;
-    }
     case 'run-command': {
       const { commandName } = value;
       const command = commands[commandName];
@@ -68,11 +51,6 @@ async function run(
       } else {
         eventHandlers.forEach(handler => run(handler(...(value.args ?? []))));
       }
-      break;
-    }
-    case 'new-source': {
-      const { sourceName, sourceFn } = value;
-      sources[sourceName] = sourceFn;
       break;
     }
     case 'register-source': {
@@ -149,15 +127,7 @@ function register(source: Source, ...args: any[]): Event_ {
   };
 }
 
-const newSource = (sourceName: string, sourceFn: Source): Event_ => ({
-  type: 'new-source',
-  sourceName,
-  sourceFn,
-});
-
 export {
-  runSource,
-  newSource,
   exec,
   init,
   send,
