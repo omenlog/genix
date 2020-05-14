@@ -28,6 +28,7 @@
   "plugins": ["@typescript-eslint"],
   "rules": {
     "no-unused-vars": "off",
+    "arrow-parens": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
