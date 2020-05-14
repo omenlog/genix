@@ -36,6 +36,21 @@ async function run(
         : await commands[value.name]();
       break;
     }
+    case 'run-command': {
+      const { commandName } = value;
+      const command = commands[commandName];
+      if (!command) {
+        it.throw(new Error(`Command not register for [COMMAND: ${commandName}]`));
+      } else {
+        try {
+          const commandResult = command(...(value.args ?? []));
+          result = commandResult instanceof Promise ? await commandResult : commandResult;
+        } catch (error) {
+          it.throw(error);
+        }
+      }
+      break;
+    }
     case 'new-handler': {
       const { eventName, handlerFn } = value;
       if (handlers[eventName] === undefined) {
@@ -45,12 +60,22 @@ async function run(
       }
       break;
     }
+    case 'event-emited': {
+      const { eventName } = value;
+      const eventHandlers = handlers[eventName];
+      if (eventHandlers === undefined || eventHandlers.length === 0) {
+        it.throw(new Error(`Handlers not defined for [EVENT:${eventName}]`));
+      } else {
+        eventHandlers.forEach(handler => run(handler(...(value.args ?? []))));
+      }
+      break;
+    }
     case 'new-source': {
       const { sourceName, sourceFn } = value;
       sources[sourceName] = sourceFn;
       break;
     }
-    case 'run-source': {
+    case 'register-source': {
       const { sourceFn, args } = value;
       const sourceIt = sourceFn(...args);
       run(sourceIt);
@@ -104,11 +129,22 @@ const newCommand = (name: string, commandFn: Function): Event_ => ({
   commandFn,
 });
 
-function runSource(source: Source | string, ...args: any[]): Event_ {
-  const sourceFn = typeof source === 'string' ? sources[source] : source;
+const emit = (eventName: string, ...args: any[]): Event_ => ({
+  type: 'event-emited',
+  eventName,
+  args,
+});
+
+const send = (commandName: string, ...args: any[]): Event_ => ({
+  type: 'run-command',
+  commandName,
+  args,
+});
+
+function register(source: Source, ...args: any[]): Event_ {
   return {
-    sourceFn,
-    type: 'run-source',
+    sourceFn: source,
+    type: 'register-source',
     args: args ?? [],
   };
 }
@@ -124,9 +160,7 @@ export {
   newSource,
   exec,
   init,
-  syncCommand,
-  clearHandlers,
-  asyncCommand,
-  handler,
-  newCommand,
+  send,
+  emit,
+  register,
 };
