@@ -83,25 +83,13 @@ function init(): void | never {
   }
 }
 
-const asyncCommand = (name: string, ...args: any[]): Event_ => ({
-  type: 'async-command',
-  name,
-  args,
-});
-
-const syncCommand = (name: string, ...args: any[]): Event_ => ({
-  type: 'sync-command',
-  name,
-  args,
-});
-
-const handler = (eventName: string, handlerFn: Source): Event_ => ({
+const onEvent = (eventName: string, handlerFn: Source): Event_ => ({
   type: 'new-handler',
   eventName,
   handlerFn,
 });
 
-const newCommand = (name: string, commandFn: Function): Event_ => ({
+const onCommand = (name: string, commandFn: Function): Event_ => ({
   type: 'new-command',
   name,
   commandFn,
@@ -133,4 +121,6 @@ export {
   send,
   emit,
   register,
+  onEvent,
+  onCommand,
 };
