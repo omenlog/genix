@@ -3,7 +3,7 @@ import {
 } from './types';
 
 
-let handlers: Handlers = {};
+const handlers: Handlers = {};
 const commands: Commands = {};
 
 type Output = {done?: boolean; value: Event_};
@@ -23,14 +23,24 @@ async function run(
       const { commandName } = value;
       const command = commands[commandName];
       if (!command) {
-        it.throw(new Error(`Command not register for [COMMAND: ${commandName}]`));
+        it.throw(new Error(`Command not registered for [COMMAND: ${commandName}]`));
       } else {
         try {
-          const commandResult = command(...(value.args ?? []));
+          const commandResult = command(...value.args);
+          // console.log(commandResult instanceof Promise);
           result = commandResult instanceof Promise ? await commandResult : commandResult;
         } catch (error) {
           it.throw(error);
         }
+      }
+      break;
+    }
+    case 'new-command': {
+      const commandName = value.name;
+      if (commands[commandName] !== undefined) {
+        it.throw(new Error('Not allowed more that one handler per command'));
+      } else {
+        commands[commandName] = value.commandFn;
       }
       break;
     }
@@ -49,7 +59,7 @@ async function run(
       if (eventHandlers === undefined || eventHandlers.length === 0) {
         it.throw(new Error(`Handlers not defined for [EVENT:${eventName}]`));
       } else {
-        eventHandlers.forEach(handler => run(handler(...(value.args ?? []))));
+        eventHandlers.forEach(handler => run(handler(...value.args)));
       }
       break;
     }
@@ -60,19 +70,15 @@ async function run(
       break;
     }
     default: {
-      console.log('default');
+      it.throw(new Error('Invalid Operation'));
     }
   }
   return run(it, result);
 }
 
-function exec(source: Source): void{
-  const it = source();
-  run(it);
-}
-
-function clearHandlers(): void{
-  handlers = {};
+function exec(source: Source, ...args: any[]) {
+  const it = source(...args);
+  return run(it);
 }
 
 function init(): void | never {
@@ -111,7 +117,7 @@ function register(source: Source, ...args: any[]): Event_ {
   return {
     sourceFn: source,
     type: 'register-source',
-    args: args ?? [],
+    args,
   };
 }
 
