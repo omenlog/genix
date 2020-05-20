@@ -6,32 +6,42 @@ export type Sources = Record<string, Source>;
 
 type EmitEvent = {
   type: 'event-emited';
-  eventName: string;
-  args? : any;
+  payload: {
+    eventName: string;
+    args? : any;
+  };
 }
 
 type NewCommand = {
   type: 'new-command';
-  name: string;
-  commandFn: Function;
+  payload: {
+    name: string;
+    commandFn: Function;
+  };
 };
 
 type RunCommand = {
   type: 'run-command';
-  commandName: string;
-  args? : any;
+  payload: {
+    commandName: string;
+    args? : any;
+  };
 }
 
 type Handler = {
   type: 'new-handler';
-  eventName: string;
-  handlerFn: Source;
+  payload: {
+    eventName: string;
+    handlerFn: Source;
+  };
 };
 
 type RegisterSource = {
   type: 'register-source';
-  sourceFn: Source;
-  args: any[];
+  payload: {
+    args: any[];
+    sourceFn: Source;
+  };
 };
 
 export type Event_ =

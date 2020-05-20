@@ -20,14 +20,14 @@ async function run(
   let result;
   switch (value.type) {
     case 'run-command': {
-      const { commandName } = value;
+      const { commandName } = value.payload;
       const command = commands[commandName];
       if (!command) {
         it.throw(new Error(`Command not registered for [COMMAND: ${commandName}]`));
       } else {
         try {
-          const commandResult = command(...value.args);
-          // console.log(commandResult instanceof Promise);
+          const { args } = value.payload;
+          const commandResult = command(...args);
           result = commandResult instanceof Promise ? await commandResult : commandResult;
         } catch (error) {
           it.throw(error);
@@ -36,16 +36,16 @@ async function run(
       break;
     }
     case 'new-command': {
-      const commandName = value.name;
+      const commandName = value.payload.name;
       if (commands[commandName] !== undefined) {
         it.throw(new Error('Not allowed more that one handler per command'));
       } else {
-        commands[commandName] = value.commandFn;
+        commands[commandName] = value.payload.commandFn;
       }
       break;
     }
     case 'new-handler': {
-      const { eventName, handlerFn } = value;
+      const { eventName, handlerFn } = value.payload;
       if (handlers[eventName] === undefined) {
         handlers[eventName] = [handlerFn];
       } else {
@@ -54,17 +54,17 @@ async function run(
       break;
     }
     case 'event-emited': {
-      const { eventName } = value;
+      const { eventName, args } = value.payload;
       const eventHandlers = handlers[eventName];
       if (eventHandlers === undefined || eventHandlers.length === 0) {
         it.throw(new Error(`Handlers not defined for [EVENT:${eventName}]`));
       } else {
-        eventHandlers.forEach(handler => run(handler(...value.args)));
+        eventHandlers.forEach(handler => run(handler(...args)));
       }
       break;
     }
     case 'register-source': {
-      const { sourceFn, args } = value;
+      const { sourceFn, args } = value.payload;
       const sourceIt = sourceFn(...args);
       run(sourceIt);
       break;
@@ -91,33 +91,43 @@ function init(): void | never {
 
 const onEvent = (eventName: string, handlerFn: Source): Event_ => ({
   type: 'new-handler',
-  eventName,
-  handlerFn,
+  payload: {
+    eventName,
+    handlerFn,
+  },
 });
 
 const onCommand = (name: string, commandFn: Function): Event_ => ({
   type: 'new-command',
-  name,
-  commandFn,
+  payload: {
+    name,
+    commandFn,
+  },
 });
 
 const emit = (eventName: string, ...args: any[]): Event_ => ({
   type: 'event-emited',
-  eventName,
-  args,
+  payload: {
+    eventName,
+    args,
+  },
 });
 
 const send = (commandName: string, ...args: any[]): Event_ => ({
   type: 'run-command',
-  commandName,
-  args,
+  payload: {
+    commandName,
+    args,
+  },
 });
 
 function register(source: Source, ...args: any[]): Event_ {
   return {
-    sourceFn: source,
     type: 'register-source',
-    args,
+    payload: {
+      sourceFn: source,
+      args,
+    },
   };
 }
 
