@@ -1,9 +1,7 @@
-import {
-  emit, onEvent, send, onCommand, exec, init, register,
-} from '../src';
+import { emit, onEvent, send, onCommand, exec, init, register } from '../src';
 import { Source } from '../src/types';
 
-type Options = {initHandler: Function}
+type Options = { initHandler: Function };
 
 function setup(options: Options) {
   function* initHandler() {
@@ -40,7 +38,9 @@ describe('Core lib tests', () => {
   describe('Sources', () => {
     it('should allow execute sources', () => {
       const testFn = jest.fn();
-      function* testSrc() { testFn(); }
+      function* testSrc() {
+        testFn();
+      }
 
       exec(testSrc);
       expect(testFn).toHaveBeenCalled();
@@ -48,9 +48,11 @@ describe('Core lib tests', () => {
 
     it('should allow execute sources passing some values as arguments ', () => {
       const testFn = jest.fn();
-      function* testSrc(arg: number) { testFn(arg); }
+      function* testSrc(arg: number) {
+        testFn(arg);
+      }
 
-      exec(testSrc, 1);
+      exec(testSrc, 2);
       expect(testFn).toHaveBeenCalledWith(1);
     });
 
@@ -71,7 +73,11 @@ describe('Core lib tests', () => {
 
     it('should throw and error is the user try to execute and invalid operation', () => {
       function* source() {
-        yield { type: 'invalid operation', eventName: 'invalid', handlerFn: () => {} };
+        yield {
+          type: 'invalid operation',
+          eventName: 'invalid',
+          handlerFn: () => {},
+        };
       }
 
       expect(exec(source as any)).rejects.toThrow();
@@ -106,7 +112,6 @@ describe('Core lib tests', () => {
       await exec(source);
       expect(mockFn).toHaveBeenCalledWith(1);
     });
-
 
     test('can have more that one handlers associated', async () => {
       const mockFn = jest.fn();
@@ -174,7 +179,9 @@ describe('Core lib tests', () => {
     });
 
     test('async commands can accept arguments and return a value', async () => {
-      const commandFn = jest.fn().mockImplementation((arg) => Promise.resolve(arg));
+      const commandFn = jest
+        .fn()
+        .mockImplementation((arg) => Promise.resolve(arg));
 
       function* source() {
         yield onCommand('test-async-command-2', commandFn);
@@ -203,7 +210,9 @@ describe('Core lib tests', () => {
     });
 
     it('should throw error if command execution fails', () => {
-      const commandFn = jest.fn().mockImplementation(() => { throw new Error(); });
+      const commandFn = jest.fn().mockImplementation(() => {
+        throw new Error();
+      });
       function* source() {
         yield onCommand('error-command', commandFn);
         yield send('error-command');
@@ -213,7 +222,9 @@ describe('Core lib tests', () => {
     });
 
     test('errors should visible inside of the source function that send the command', async () => {
-      const commandFn = jest.fn().mockImplementation(() => { throw new Error(); });
+      const commandFn = jest.fn().mockImplementation(() => {
+        throw new Error();
+      });
       function* source() {
         try {
           yield onCommand('a-command', commandFn);
