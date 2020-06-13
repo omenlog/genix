@@ -1,17 +1,12 @@
-import {
-  Commands, Event_, Source, Handlers,
-} from './types';
-
+import { Commands, Event_, Source, Handlers } from './types';
+import { command, onCommand, emit, onEvent } from './helpers';
 
 const handlers: Handlers = {};
 const commands: Commands = {};
 
-type Output = {done?: boolean; value: Event_};
+type Output = { done?: boolean; value: Event_ };
 
-async function run(
-  it: Generator<Event_>,
-  payload: any = {},
-): Promise<any> {
+async function run(it: Generator<Event_>, payload: any = {}): Promise<any> {
   const { done, value }: Output = it.next(payload);
   if (done) {
     return value;
@@ -23,12 +18,17 @@ async function run(
       const { commandName } = value.payload;
       const command = commands[commandName];
       if (!command) {
-        it.throw(new Error(`Command not registered for [COMMAND: ${commandName}]`));
+        it.throw(
+          new Error(`Command not registered for [COMMAND: ${commandName}]`)
+        );
       } else {
         try {
           const { args } = value.payload;
           const commandResult = command(...args);
-          result = commandResult instanceof Promise ? await commandResult : commandResult;
+          result =
+            commandResult instanceof Promise
+              ? await commandResult
+              : commandResult;
         } catch (error) {
           it.throw(error);
         }
@@ -59,7 +59,7 @@ async function run(
       if (eventHandlers === undefined || eventHandlers.length === 0) {
         it.throw(new Error(`Handlers not defined for [EVENT:${eventName}]`));
       } else {
-        eventHandlers.forEach(handler => run(handler(...args)));
+        eventHandlers.forEach((handler) => run(handler(...args)));
       }
       break;
     }
@@ -89,38 +89,6 @@ function init(): void | never {
   }
 }
 
-const onEvent = (eventName: string, handlerFn: Source): Event_ => ({
-  type: 'new-handler',
-  payload: {
-    eventName,
-    handlerFn,
-  },
-});
-
-const onCommand = (name: string, commandFn: Function): Event_ => ({
-  type: 'new-command',
-  payload: {
-    name,
-    commandFn,
-  },
-});
-
-const emit = (eventName: string, ...args: any[]): Event_ => ({
-  type: 'event-emited',
-  payload: {
-    eventName,
-    args,
-  },
-});
-
-const send = (commandName: string, ...args: any[]): Event_ => ({
-  type: 'run-command',
-  payload: {
-    commandName,
-    args,
-  },
-});
-
 function register(source: Source, ...args: any[]): Event_ {
   return {
     type: 'register-source',
@@ -131,12 +99,4 @@ function register(source: Source, ...args: any[]): Event_ {
   };
 }
 
-export {
-  exec,
-  init,
-  send,
-  emit,
-  register,
-  onEvent,
-  onCommand,
-};
+export { exec, init, command, emit, register, onEvent, onCommand };
