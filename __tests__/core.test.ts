@@ -8,6 +8,7 @@ import {
   register,
 } from '../src';
 import { Source } from '../src/types';
+import { g } from '../src/sources';
 
 type Options = { initHandler: Function };
 
@@ -64,7 +65,7 @@ describe('Core lib tests', () => {
       expect(testFn).toHaveBeenCalledWith(1);
     });
 
-    it('should allow execute new sources as events', () => {
+    it('should allow  register new sources from sources', () => {
       const testFn = jest.fn();
 
       function* newSrc() {
@@ -77,6 +78,47 @@ describe('Core lib tests', () => {
 
       exec(testSrc);
       expect(testFn).toHaveBeenCalled();
+    });
+
+    it('should export a function that make easier integration with cb handlers', (done) => {
+      const testFn = jest.fn();
+      function* handler() {
+        testFn();
+      }
+
+      function* source() {
+        yield onEvent('async-event', handler);
+      }
+
+      function* timeOutHandler() {
+        yield emit('async-event');
+        expect(testFn).toHaveBeenCalled();
+        done();
+      }
+
+      exec(source);
+      setTimeout(g(timeOutHandler), 0);
+    });
+
+    test('g function allow pass arguments to inner source', () => {
+      const testFn = jest.fn();
+      function* testSrc(name: string) {
+        testFn(name);
+      }
+
+      const handler = g(testSrc);
+      handler('omar');
+      expect(testFn).toHaveBeenCalledWith('omar');
+    });
+
+    test('g function allow get sources return values', async () => {
+      function* src() {
+        return 10;
+      }
+
+      const handler = g(src);
+      const result = await handler();
+      expect(result).toBe(10);
     });
 
     it('should throw and error is the user try to execute and invalid operation', () => {

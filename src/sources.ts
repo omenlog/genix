@@ -6,7 +6,7 @@ function register(source: Source, ...args: any[]): Event_ {
     meta: {
       type: 'register-source',
     },
-    async fn(it: Generator) {
+    async fn() {
       const sourceIt = source(...args);
       run(sourceIt);
     },
@@ -18,4 +18,8 @@ function exec(source: Source, ...args: any[]) {
   return run(it);
 }
 
-export { register, exec };
+function g(source: Source) {
+  return (...args: any[]) => exec(source, ...args);
+}
+
+export { register, exec, g };
