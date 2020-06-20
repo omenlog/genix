@@ -35,6 +35,7 @@
     "no-unused-vars": "off",
     "arrow-parens": "off",
     "require-yield": "off",
+    "func-names": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "import/extensions": [
       "error",
