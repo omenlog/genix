@@ -8,7 +8,7 @@ import {
   register,
 } from '../src';
 import { Source } from '../src/types';
-import { g } from '../src/sources';
+import { g, mapEvents } from '../src/sources';
 
 type Options = { initHandler: Function };
 
@@ -119,6 +119,96 @@ describe('Core lib tests', () => {
       const handler = g(src);
       const result = await handler();
       expect(result).toBe(10);
+    });
+
+    it('should allow map one event from incoming source to an event of external source', async () => {
+      const testFn = jest.fn();
+
+      const eventMap = {
+        'event-1': 'event-2',
+      };
+
+      function* externalSrc() {
+        yield onEvent('event-2', function* () {
+          testFn();
+        });
+      }
+
+      function* internalSrc() {
+        yield onEvent('event-1', function* () {
+          return 10;
+        });
+        yield emit('event-1');
+      }
+
+      await exec(externalSrc);
+
+      await mapEvents(eventMap);
+
+      await exec(internalSrc);
+      expect(testFn).toHaveBeenCalled();
+    });
+
+    it('should allow map event from incoming source to varios events of external sources', async () => {
+      const testFn = jest.fn();
+
+      const eventMap = {
+        'event-11': ['event-12', 'event-13'],
+      };
+
+      function* externalSrc1() {
+        yield onEvent('event-12', function* src() {
+          testFn();
+        });
+      }
+
+      function* externalSrc2() {
+        yield onEvent('event-13', function* src() {
+          testFn();
+        });
+      }
+
+      function* internalSrc() {
+        yield onEvent('event-11', function* a() {
+          return 10;
+        });
+        yield emit('event-11');
+      }
+
+      await exec(externalSrc1);
+      await exec(externalSrc2);
+
+      await mapEvents(eventMap);
+
+      await exec(internalSrc);
+      expect(testFn).toHaveBeenCalledTimes(2);
+    });
+
+    it('should pass event arguments during event mapping', async () => {
+      const testFn = jest.fn();
+
+      function* externalSrc() {
+        yield onEvent('event-22', function* (...args: any[]) {
+          testFn(...args);
+        });
+      }
+
+      function* internalSrc() {
+        yield onEvent('event-21', function* () {
+          return 10;
+        });
+        yield emit('event-21', 10);
+      }
+
+      const eventsMap = {
+        'event-21': 'event-22',
+      };
+
+      await exec(externalSrc);
+      await mapEvents(eventsMap);
+      await exec(internalSrc);
+
+      expect(testFn).toHaveBeenCalledWith(10);
     });
 
     it('should throw and error is the user try to execute and invalid operation', () => {

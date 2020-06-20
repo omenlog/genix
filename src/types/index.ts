@@ -1,7 +1,7 @@
 export type Handlers = Record<string, Function[]>;
 export type Commands = Record<string, Function>;
 
-export type Source = (args?: any) => Generator<Event_>;
+export type Source = (...args: any[]) => Generator<Event_>;
 export type Sources = Record<string, Source>;
 
 type EmitEvent = {
