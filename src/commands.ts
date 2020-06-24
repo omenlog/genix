@@ -1,6 +1,6 @@
 import { Commands, Event_ } from './types';
 
-const commands: Commands = {};
+let commands: Commands = {};
 
 function onCommand(name: string, commandFn: Function): Event_ {
   return {
@@ -39,4 +39,16 @@ function command(commandName: string, ...args: any[]): Event_ {
   };
 }
 
-export { onCommand, command };
+function clear() {
+  commands = {
+    'test.utils.clearCommands': clear,
+  };
+}
+
+function* commandsSrc() {
+  if (process.env.NODE_ENV === 'test') {
+    yield onCommand('test.utils.clearCommands', clear);
+  }
+}
+
+export { onCommand, command, commandsSrc };
