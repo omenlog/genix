@@ -1,5 +1,5 @@
 import { Handlers, Source, Event_ } from './types';
-import run from './runner';
+import { run } from './runners';
 
 const handlers: Handlers = {};
 
@@ -21,7 +21,9 @@ function onEvent(eventName: string, handlerFn: Source): Event_ {
 function emit(eventName: string, ...args: any[]): Event_ {
   return {
     meta: {
+      args,
       type: 'event-emited',
+      name: eventName,
     },
     async fn(it: Generator) {
       const eventHandlers = handlers[eventName];
