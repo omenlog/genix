@@ -1,3 +1,3 @@
-import { clearCommands } from './tools';
+import { clearCommands, exec } from './tools';
 
-export default { clearCommands };
+export default { clearCommands, exec };

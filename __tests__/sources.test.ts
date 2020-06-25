@@ -1,7 +1,29 @@
-import { exec, register, onEvent, emit, g, mapEvents } from '../src';
+import {
+  exec,
+  register,
+  onEvent,
+  emit,
+  g,
+  mapEvents,
+  testTools,
+  command,
+} from '../src';
+
+function* getUser(userName: string) {
+  let user = yield command('read-user-from-cache', userName);
+  if (!user) {
+    yield emit('user-not-found', userName);
+    user = yield command('get-user-data', userName);
+  }
+
+  return user.email;
+}
 
 describe('Sources', () => {
-  beforeEach(() => expect.hasAssertions());
+  beforeEach(() => {
+    testTools.clearCommands();
+    expect.hasAssertions();
+  });
   it('should allow execute sources', () => {
     const testFn = jest.fn();
     function* testSrc() {
@@ -178,5 +200,38 @@ describe('Sources', () => {
     }
 
     expect(exec(source as any)).rejects.toThrow();
+  });
+
+  describe('Test Source Utils', () => {
+    const userEmail = 'user@email.com';
+    const commands = {
+      'read-user-from-cache': () => undefined,
+      'get-user-data': (userName: any) => ({
+        name: userName,
+        email: userEmail,
+      }),
+    };
+    test('sources can be executed using mocked commands', async () => {
+      const { result, events } = await testTools.exec(
+        () => getUser('omar'),
+        commands
+      );
+      expect(events['user-not-found'].args[0]).toBe('omar');
+      expect(result).toBe(userEmail);
+    });
+
+    test('sources can used mocked commands', async () => {
+      const fakeCommands = {
+        ...commands,
+        ...{ 'read-user-from-cache': () => ({ email: 'test@user.com' }) },
+      };
+
+      const { result } = await testTools.exec(
+        () => getUser('test'),
+        fakeCommands
+      );
+
+      expect(result).toBe('test@user.com');
+    });
   });
 });
