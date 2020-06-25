@@ -7,6 +7,8 @@ export type Sources = Record<string, Source>;
 type EmitEvent = {
   meta: {
     type: 'event-emited';
+    name: string;
+    args: any[];
   };
   fn: (it: Generator) => Promise<any>;
 };

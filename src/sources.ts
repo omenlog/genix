@@ -1,4 +1,4 @@
-import run from './runner';
+import { run } from './runners';
 import { Source, Event_ } from './types';
 import { emit, onEvent } from './events';
 
