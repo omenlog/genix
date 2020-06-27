@@ -1,9 +1,9 @@
-import { Handlers, Source, Event_ } from './types';
+import { Handlers, Event_, Handler } from './types';
 import { run } from './runners';
 
 const handlers: Handlers = {};
 
-function onEvent(eventName: string, handlerFn: Source): Event_ {
+function onEvent(eventName: string, handlerFn: Handler): Event_ {
   return {
     meta: {
       type: 'new-handler',
@@ -30,7 +30,11 @@ function emit(eventName: string, ...args: any[]): Event_ {
     async fn() {
       const eventHandlers = handlers[eventName];
       if (eventHandlers !== undefined && eventHandlers.size !== 0)
-        eventHandlers.forEach((handler) => run(handler(...args)));
+        eventHandlers.forEach((handler) =>
+          handler.constructor.name === 'GeneratorFunction'
+            ? run(handler(...args))
+            : handler(...args)
+        );
     },
   };
 }

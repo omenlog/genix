@@ -5,7 +5,9 @@ export type Source = (
 ) => Generator<Event_, any, { unsubscribe: () => void }>;
 export type Sources = Record<string, Source>;
 
-export type Handlers = Record<string, Map<Source, Source>>;
+export type Handler = Source | Function;
+
+export type Handlers = Record<string, Map<Handler, Handler>>;
 
 type EmitEvent = {
   meta: {
@@ -16,7 +18,7 @@ type EmitEvent = {
   fn: (it: Generator) => Promise<any>;
 };
 
-type Handler = {
+type EventHandler = {
   meta: {
     type: 'new-handler';
   };
@@ -45,7 +47,7 @@ type RunCommand = {
 };
 
 export type Event_ =
-  | Handler
+  | EventHandler
   | EmitEvent
   | RunCommand
   | RegisterSource
