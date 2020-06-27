@@ -1,61 +1,80 @@
-import { onEvent, emit, exec } from '../src';
+import { onEvent, emit, g } from '../src';
 
 describe('Events', () => {
   beforeEach(() => {
     expect.hasAssertions();
   });
-  it('should allow register and emit events', async () => {
-    const mockFn = jest.fn();
-    function* handler() {
-      mockFn();
-    }
-    function* source() {
-      yield onEvent('test-event', handler);
+  it(
+    'should allow register and emit events',
+    g(function* () {
+      const mockFn = jest.fn();
+
+      const subscription = yield onEvent('test-event', function* () {
+        mockFn();
+      });
+
       yield emit('test-event');
-    }
 
-    await exec(source);
-    expect(mockFn).toHaveBeenCalled();
-  });
+      expect(mockFn).toHaveBeenCalled();
+      subscription.unsubscribe();
+    })
+  );
 
-  it('should allow register events that receive args and emit them pasing some args ', async () => {
-    const mockFn = jest.fn();
-    function* handler(arg: any) {
-      mockFn(arg);
-    }
-    function* source() {
-      yield onEvent('test-event', handler);
+  it(
+    'should allow register events that receive args and emit them pasing some args ',
+    g(function* () {
+      const mockFn = jest.fn();
+
+      const subscription = yield onEvent('test-event', function* (arg) {
+        mockFn(arg);
+      });
+
       yield emit('test-event', 1);
-    }
 
-    await exec(source);
-    expect(mockFn).toHaveBeenCalledWith(1);
-  });
+      expect(mockFn).toHaveBeenCalledWith(1);
+      subscription.unsubscribe();
+    })
+  );
 
-  test('can have more that one handlers associated', async () => {
-    const mockFn = jest.fn();
-    function* handler1() {
-      mockFn();
-    }
-    function* handler2() {
-      mockFn();
-    }
+  test(
+    'can have more that one handlers associated',
+    g(function* () {
+      const mockFn = jest.fn();
 
-    function* source() {
-      yield onEvent('test-event', handler1);
-      yield onEvent('test-event', handler2);
+      const subscription1 = yield onEvent('test-event', function* () {
+        mockFn();
+      });
+
+      const subscription2 = yield onEvent('test-event', function* () {
+        mockFn();
+      });
+
       yield emit('test-event');
-    }
 
-    await exec(source);
-    expect(mockFn).toHaveBeenCalledTimes(2);
-  });
+      expect(mockFn).toHaveBeenCalledTimes(2);
 
-  it('should throw an error if the user try to sent and event without handler associated', () => {
-    function* source() {
-      yield emit('unexisting-event');
-    }
+      subscription1.unsubscribe();
+      subscription2.unsubscribe();
+    })
+  );
 
-    expect(exec(source)).rejects.toThrow();
-  });
+  test(
+    'events subscriptions can be cancelled',
+    g(function* () {
+      const testFn = jest.fn();
+
+      const subscription = yield onEvent('test-event', function* () {
+        testFn();
+      });
+
+      yield emit('test-event');
+      yield emit('test-event');
+
+      subscription.unsubscribe();
+
+      yield emit('test-event');
+
+      expect(testFn).toHaveBeenCalledTimes(2);
+    })
+  );
 });

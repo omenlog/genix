@@ -1,8 +1,11 @@
-export type Handlers = Record<string, Function[]>;
 export type Commands = Record<string, Function>;
 
-export type Source = (...args: any[]) => Generator<Event_>;
+export type Source = (
+  ...args: any[]
+) => Generator<Event_, any, { unsubscribe: () => void }>;
 export type Sources = Record<string, Source>;
+
+export type Handlers = Record<string, Map<Source, Source>>;
 
 type EmitEvent = {
   meta: {

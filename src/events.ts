@@ -10,10 +10,12 @@ function onEvent(eventName: string, handlerFn: Source): Event_ {
     },
     async fn() {
       if (handlers[eventName] === undefined) {
-        handlers[eventName] = [handlerFn];
+        handlers[eventName] = new Map();
+        handlers[eventName].set(handlerFn, handlerFn);
       } else {
-        handlers[eventName].push(handlerFn);
+        handlers[eventName].set(handlerFn, handlerFn);
       }
+      return { unsubscribe: () => handlers[eventName].delete(handlerFn) };
     },
   };
 }
@@ -25,23 +27,12 @@ function emit(eventName: string, ...args: any[]): Event_ {
       type: 'event-emited',
       name: eventName,
     },
-    async fn(it: Generator) {
+    async fn() {
       const eventHandlers = handlers[eventName];
-      if (eventHandlers === undefined || eventHandlers.length === 0) {
-        it.throw(new Error(`Handlers not defined for [EVENT:${eventName}]`));
-      } else {
+      if (eventHandlers !== undefined && eventHandlers.size !== 0)
         eventHandlers.forEach((handler) => run(handler(...args)));
-      }
     },
   };
 }
 
-function init(): void | never {
-  if (handlers.init === undefined) {
-    throw new Error('Missing INIT handler');
-  } else {
-    run(handlers.init[0]());
-  }
-}
-
-export { onEvent, emit, init };
+export { onEvent, emit };
