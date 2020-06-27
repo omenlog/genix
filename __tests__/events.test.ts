@@ -77,4 +77,15 @@ describe('Events', () => {
       expect(testFn).toHaveBeenCalledTimes(2);
     })
   );
+
+  test(
+    'events can have functions as handlers',
+    g(function* () {
+      const testFn = jest.fn();
+      yield onEvent('test-event', testFn);
+      yield emit('test-event');
+
+      expect(testFn).toHaveBeenCalled();
+    })
+  );
 });
