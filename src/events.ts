@@ -10,10 +10,12 @@ function onEvent(eventName: string, handlerFn: Source): Event_ {
     },
     async fn() {
       if (handlers[eventName] === undefined) {
-        handlers[eventName] = [handlerFn];
+        handlers[eventName] = new Map();
+        handlers[eventName].set(handlerFn, handlerFn);
       } else {
-        handlers[eventName].push(handlerFn);
+        handlers[eventName].set(handlerFn, handlerFn);
       }
+      return { unsubscribe: () => handlers[eventName].delete(handlerFn) };
     },
   };
 }

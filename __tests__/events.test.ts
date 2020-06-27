@@ -49,13 +49,23 @@ describe('Events', () => {
 
     await exec(source);
     expect(mockFn).toHaveBeenCalledTimes(2);
+  test(
+    'events subscriptions can be cancelled',
+    g(function* () {
+      const testFn = jest.fn();
+
+      const subscription = yield onEvent('test-event', function* () {
+        testFn();
   });
 
-  it('should throw an error if the user try to sent and event without handler associated', () => {
-    function* source() {
-      yield emit('unexisting-event');
-    }
+      yield emit('test-event');
+      yield emit('test-event');
 
-    expect(exec(source)).rejects.toThrow();
-  });
+      subscription.unsubscribe();
+
+      yield emit('test-event');
+
+      expect(testFn).toHaveBeenCalledTimes(2);
+    })
+  );
 });
