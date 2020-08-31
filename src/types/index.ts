@@ -1,4 +1,5 @@
 export type Commands = Record<string, Function>;
+export type EventIterator = Generator<Event_, any, {unsubscribe: () => void}>
 
 export type Source = (
   ...args: any[]
