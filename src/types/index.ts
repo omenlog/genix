@@ -12,7 +12,7 @@ export type Handlers = Record<string, Map<Handler, Handler>>;
 
 type EmitEvent = {
   meta: {
-    type: 'event-emited';
+    type: 'event-emitted';
     name: string;
     args: any[];
   };

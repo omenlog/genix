@@ -31,7 +31,7 @@ async function testRun(
     const {value} = iter;
     validateOperation(value)
 
-    if(value.meta.type === 'event-emited'){
+    if(value.meta.type === 'event-emitted'){
       events[value.meta.name] = { args: value.meta.args };
     }
 

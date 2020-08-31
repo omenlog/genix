@@ -21,7 +21,7 @@ describe('Events', () => {
   );
 
   it(
-    'should allow register events that receive args and emit them pasing some args ',
+    'should allow register events that receive args and emit them passing some args ',
     g(function* () {
       const mockFn = jest.fn();
 

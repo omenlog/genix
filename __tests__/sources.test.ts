@@ -128,7 +128,7 @@ describe('Sources', () => {
     expect(testFn).toHaveBeenCalled();
   });
 
-  it('should allow map event from incoming source to varios events of external sources', async () => {
+  it('should allow map event from incoming source to various events of external sources', async () => {
     const testFn = jest.fn();
 
     const eventMap = {
