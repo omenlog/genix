@@ -24,7 +24,7 @@ function emit(eventName: string, ...args: any[]): Event_ {
   return {
     meta: {
       args,
-      type: 'event-emited',
+      type: 'event-emitted',
       name: eventName,
     },
     async fn() {

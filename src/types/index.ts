@@ -1,4 +1,5 @@
 export type Commands = Record<string, Function>;
+export type EventIterator = Generator<Event_, any, {unsubscribe: () => void}>
 
 export type Source = (
   ...args: any[]
@@ -11,7 +12,7 @@ export type Handlers = Record<string, Map<Handler, Handler>>;
 
 type EmitEvent = {
   meta: {
-    type: 'event-emited';
+    type: 'event-emitted';
     name: string;
     args: any[];
   };

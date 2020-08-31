@@ -56,7 +56,7 @@ describe('Commands', () => {
     expect(commandFn).toHaveBeenCalledWith(10);
   });
 
-  it('should throw and error if we try to assing more that one handler per command', () => {
+  it('should throw and error if we try to assign more that one handler per command', () => {
     function* source() {
       yield onCommand('test-command', setTimeout);
       yield onCommand('test-command', setTimeout);

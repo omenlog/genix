@@ -1,42 +1,45 @@
-import { Event_ } from './types';
+import { EventIterator, Event_ } from './types';
 
-async function run(it: Generator, payload: any = {}): Promise<any> {
-  const { done, value } = it.next(payload);
-
-  if (done) {
-    return value;
-  }
-
-  if (!value.meta || !value.fn) {
+const validateOperation = (ev: Event_) => {
+  if(!ev.meta || !ev.fn){
     throw new Error('Invalid Operation');
   }
+} 
 
-  const result = await value.fn(it);
-  return run(it, result);
+async function run(it: EventIterator, payload: any = {}): Promise<any> | never  {
+  let iter = it.next(payload);
+  let result;
+
+  while(!iter.done) {
+    validateOperation(iter.value)
+    result = await iter.value.fn(it);
+    iter = it.next(result)
+  }
+ 
+  return iter.value
 }
 
 async function testRun(
-  it: Generator<Event_>,
+  it: EventIterator,
   payload: any,
   events: any
-): Promise<any> {
-  const { done, value }: IteratorResult<Event_> = it.next(payload);
+): Promise<{result: any, events: any}> {
+  let iter = it.next(payload);
+  let result;
 
-  if (done) {
-    return {
-      result: value,
-      events,
-    };
+  while(!iter.done){
+    const {value} = iter;
+    validateOperation(value)
+
+    if(value.meta.type === 'event-emitted'){
+      events[value.meta.name] = { args: value.meta.args };
+    }
+
+    result = await value.fn(it);
+    iter = it.next(result);
   }
 
-  if (value.meta.type === 'event-emited') {
-    // eslint-disable-next-line no-param-reassign
-    events[value.meta.name] = { args: value.meta.args };
-    return testRun(it, payload, events);
-  }
-
-  const result = await value.fn(it);
-  return testRun(it, result, events);
+  return {result : iter.value, events}
 }
 
 export { run, testRun };
