@@ -216,22 +216,9 @@ describe('Sources', () => {
         () => getUser('omar'),
         commands
       );
+
       expect(events['user-not-found'].args[0]).toBe('omar');
       expect(result).toBe(userEmail);
-    });
-
-    test('sources can used mocked commands', async () => {
-      const fakeCommands = {
-        ...commands,
-        ...{ 'read-user-from-cache': () => ({ email: 'test@user.com' }) },
-      };
-
-      const { result } = await testTools.exec(
-        () => getUser('test'),
-        fakeCommands
-      );
-
-      expect(result).toBe('test@user.com');
     });
   });
 });
