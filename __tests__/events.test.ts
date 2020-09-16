@@ -1,91 +1,120 @@
-import { onEvent, emit, g } from '../src';
+import { onEvent, emit, mapEvents } from '../src';
 
 describe('Events', () => {
   beforeEach(() => {
     expect.hasAssertions();
   });
-  it(
-    'should allow register and emit events',
-    g(function* () {
-      const mockFn = jest.fn();
+  test('events subscriptions can be cancelled', () => {
+    const testFn = jest.fn();
 
-      const subscription = yield onEvent('test-event', function* () {
-        mockFn();
-      });
+    const subscription = onEvent('test-event', () => {
+      testFn();
+    });
 
-      yield emit('test-event');
+    emit('test-event');
+    emit('test-event');
 
-      expect(mockFn).toHaveBeenCalled();
-      subscription.unsubscribe();
-    })
-  );
+    subscription.unsubscribe();
 
-  it(
-    'should allow register events that receive args and emit them passing some args ',
-    g(function* () {
-      const mockFn = jest.fn();
+    emit('test-event');
 
-      const subscription = yield onEvent('test-event', function* (arg) {
-        mockFn(arg);
-      });
+    expect(testFn).toHaveBeenCalledTimes(2);
+  });
 
-      yield emit('test-event', 1);
+  it('should allow register and emit events', () => {
+    const mockFn = jest.fn();
+    const subscription = onEvent('test-event', function () {
+      mockFn();
+    });
 
-      expect(mockFn).toHaveBeenCalledWith(1);
-      subscription.unsubscribe();
-    })
-  );
+    emit('test-event');
+    expect(mockFn).toHaveBeenCalled();
+    subscription.unsubscribe();
+  });
 
-  test(
-    'can have more that one handlers associated',
-    g(function* () {
-      const mockFn = jest.fn();
+  it('should allow pass arguments to event handlers', () => {
+    const mockFn = jest.fn();
+    const subscription = onEvent('test-event', (arg) => {
+      mockFn(arg);
+    });
 
-      const subscription1 = yield onEvent('test-event', function* () {
-        mockFn();
-      });
+    emit('test-event', 1);
 
-      const subscription2 = yield onEvent('test-event', function* () {
-        mockFn();
-      });
+    expect(mockFn).toHaveBeenCalledWith(1);
+    subscription.unsubscribe();
+  });
 
-      yield emit('test-event');
+  test('events can have more that one handlers associated', () => {
+    const mockFn = jest.fn();
 
-      expect(mockFn).toHaveBeenCalledTimes(2);
+    const subscription1 = onEvent('test-event', () => {
+      mockFn();
+    });
 
-      subscription1.unsubscribe();
-      subscription2.unsubscribe();
-    })
-  );
+    const subscription2 = onEvent('test-event', () => {
+      mockFn();
+    });
 
-  test(
-    'events subscriptions can be cancelled',
-    g(function* () {
-      const testFn = jest.fn();
+    emit('test-event');
 
-      const subscription = yield onEvent('test-event', function* () {
-        testFn();
-      });
+    expect(mockFn).toHaveBeenCalledTimes(2);
 
-      yield emit('test-event');
-      yield emit('test-event');
+    subscription1.unsubscribe();
+    subscription2.unsubscribe();
+  });
+  it('should allow map one event to another', () => {
+    const event1Handler = jest.fn();
+    const event2Handler = jest.fn();
+    const arg = 10;
 
-      subscription.unsubscribe();
+    const eventsMap = {
+      'event-1': 'event-2',
+    };
 
-      yield emit('test-event');
+    const external = () => onEvent('event-2', event2Handler);
+    const internal = () => onEvent('event-1', event1Handler);
 
-      expect(testFn).toHaveBeenCalledTimes(2);
-    })
-  );
+    const event1Sub = internal();
+    const event2Sub = external();
 
-  test(
-    'events can have functions as handlers',
-    g(function* () {
-      const testFn = jest.fn();
-      yield onEvent('test-event', testFn);
-      yield emit('test-event');
+    mapEvents(eventsMap);
 
-      expect(testFn).toHaveBeenCalled();
-    })
-  );
+    emit('event-1', arg);
+
+    expect(event1Handler).toHaveBeenCalled();
+    expect(event2Handler).toHaveBeenCalledWith(arg);
+
+    event1Sub.unsubscribe();
+    event2Sub.unsubscribe();
+  });
+  it('should allow map one event to various events', () => {
+    const event1Handler = jest.fn();
+    const event2Handler = jest.fn();
+    const event3Handler = jest.fn();
+    const arg = 10;
+
+    const eventsMap = {
+      'event-1': ['event-2', 'event-3'],
+    };
+
+    const external2 = () => onEvent('event-2', event2Handler);
+    const external3 = () => onEvent('event-3', event3Handler);
+    const internal = () => onEvent('event-1', event1Handler);
+
+    const event1Sub = internal();
+    const event2Sub = external2();
+    const event3Sub = external3();
+
+    mapEvents(eventsMap);
+
+    emit('event-1', arg);
+
+    expect(event1Handler).toHaveBeenCalled();
+    expect(event2Handler).toHaveBeenCalledWith(arg);
+    expect(event3Handler).toHaveBeenCalledWith(arg);
+
+    event1Sub.unsubscribe();
+    event2Sub.unsubscribe();
+    event3Sub.unsubscribe();
+  });
 });
