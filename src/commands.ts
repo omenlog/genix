@@ -1,54 +1,44 @@
-import { Commands, Event_ } from './types';
+import { emit } from './events';
+import { Commands } from './types';
 
 let commands: Commands = {};
 
-function onCommand(name: string, commandFn: Function): Event_ {
+type CommandConfiguration = {
+  remove: () => void;
+};
+
+function onCommand(
+  commandName: string,
+  commandFn: Function
+): CommandConfiguration {
+  if (commands[commandName] !== undefined) {
+    throw new Error('Not allowed more then one handler per command');
+  } else {
+    commands[commandName] = commandFn;
+  }
+
   return {
-    meta: {
-      type: 'new-command',
-    },
-    async fn(it: Generator) {
-      if (commands[name] !== undefined) {
-        it.throw(new Error('Not allowed more then one handler per command'));
-      } else {
-        commands[name] = commandFn;
-      }
-    },
+    remove: () => delete commands[commandName],
   };
 }
 
-function command(commandName: string, ...args: any[]): Event_ {
-  return {
-    meta: {
-      type: 'run-command',
-    },
-    async fn(it: Generator) {
-      const com = commands[commandName];
-      if (!com) {
-        it.throw(
-          new Error(`Command not registered for [COMMAND: ${commandName}]`)
-        );
-      } else {
-        try {
-          return com(...args);
-        } catch (error) {
-          it.throw(error);
-        }
-      }
-    },
-  };
-}
-
-function clear() {
-  commands = {
-    'test.utils.clearCommands': clear,
-  };
-}
-
-function* commandsSrc() {
-  if (process.env.NODE_ENV === 'test') {
-    yield onCommand('test.utils.clearCommands', clear);
+function exec(commandName: string, ...args: any[]) {
+  const com = commands[commandName];
+  if (!com) {
+    throw new Error(`Command not registered for [COMMAND: ${commandName}]`);
+  } else {
+    return com(...args);
   }
 }
 
-export { onCommand, command, commandsSrc };
+function initCommands() {
+  onCommand('genix-clear-commands', () => {
+    commands = {};
+    emit('genix-commands-cleared');
+    initCommands();
+  });
+}
+
+initCommands();
+
+export { onCommand, exec };
