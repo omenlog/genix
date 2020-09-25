@@ -1,20 +1,19 @@
-import { onCommand, exec } from '../src';
+import genix, { onCommand, exec } from '../src';
 
 describe('Commands', () => {
   beforeEach(async () => {
     expect.hasAssertions();
   });
-  // await testTools.clearCommands();
-  test('sync commands can be registered and executed', () => {
+  test('sync commands can be registered and executed', async () => {
     const commandFn = jest.fn();
 
     function source() {
-      const c = onCommand('test-command', commandFn);
+      onCommand('test-command', commandFn);
       exec('test-command');
-      c.remove();
     }
 
-    source();
+    const wrapper = genix.wrap(source);
+    await wrapper.run();
 
     expect(commandFn).toHaveBeenCalled();
   });
@@ -23,57 +22,66 @@ describe('Commands', () => {
     const commandFn = (value: number) => Promise.resolve(value + 1);
 
     async function source() {
-      const c = onCommand('test-command', commandFn);
-      const value = exec('test-command', 1);
-      c.remove();
-
-      return value;
+      onCommand('test-command', commandFn);
+      return exec('test-command', 1);
     }
 
-    const value = await source();
-    expect(value).toBe(2);
+    const wrapper = genix.wrap(source);
+
+    const { data } = await wrapper.run();
+
+    expect(data).toBe(2);
   });
 
-  it('should throw and error if we try to execute a not registered command', () => {
+  it('should throw and error if we try to execute a not registered command', async () => {
     function source() {
       exec('no-registered-command', setTimeout);
     }
 
-    expect(source).toThrow();
+    const wrapper = genix.wrap(source);
+
+    try {
+      await wrapper.run();
+    } catch (error) {
+      expect(error.message).toBe(
+        'Command not registered for [COMMAND: no-registered-command]'
+      );
+    }
   });
 
-  it('should throw error if command execution fails', () => {
+  it('should throw error if command execution fails', async () => {
     const commandFn = jest.fn().mockImplementation(() => {
-      throw new Error();
+      throw new Error('Command execution failed');
     });
 
-    let c;
-
     function source() {
-      c = onCommand('error-command', commandFn);
+      onCommand('error-command', commandFn);
       exec('error-command');
     }
 
-    expect(source).toThrow();
-    c.remove();
+    const wrapper = genix.wrap(source);
+
+    try {
+      await wrapper.run();
+    } catch (error) {
+      expect(error.message).toBe('Command execution failed');
+    }
   });
 
   test('errors be should visible inside of the source function that send the command', async () => {
     const commandFn = jest.fn().mockImplementation(() => {
-      throw new Error();
+      throw new Error('Command failed');
     });
 
     function source() {
-      let c;
       try {
-        c = onCommand('a-command', commandFn);
+        onCommand('a-command', commandFn);
         exec('a-command');
       } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        c.remove();
+        expect(error.message).toBe('Command failed');
       }
     }
 
-    source();
+    await genix.wrap(source).run();
   });
 });

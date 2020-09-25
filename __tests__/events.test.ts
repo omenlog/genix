@@ -1,120 +1,135 @@
-import { onEvent, emit, mapEvents } from '../src';
+import genix, { onEvent, emit, mapEvents } from '../src';
 
 describe('Events', () => {
   beforeEach(() => {
     expect.hasAssertions();
   });
-  test('events subscriptions can be cancelled', () => {
+  test('events subscriptions can be cancelled', async () => {
     const testFn = jest.fn();
 
-    const subscription = onEvent('test-event', () => {
-      testFn();
-    });
+    function source() {
+      const subscription = onEvent('test-event', () => {
+        testFn();
+      });
 
-    emit('test-event');
-    emit('test-event');
+      emit('test-event');
+      emit('test-event');
 
-    subscription.unsubscribe();
+      subscription.unsubscribe();
 
-    emit('test-event');
+      emit('test-event');
+    }
+
+    await genix.wrap(source).run();
 
     expect(testFn).toHaveBeenCalledTimes(2);
   });
 
-  it('should allow register and emit events', () => {
+  it('should allow register and emit events', async () => {
     const mockFn = jest.fn();
-    const subscription = onEvent('test-event', function () {
-      mockFn();
-    });
 
-    emit('test-event');
+    function source() {
+      onEvent('test-event', function () {
+        mockFn();
+      });
+
+      emit('test-event');
+    }
+
+    await genix.wrap(source).run();
+
     expect(mockFn).toHaveBeenCalled();
-    subscription.unsubscribe();
   });
 
-  it('should allow pass arguments to event handlers', () => {
+  it('should allow pass arguments to event handlers', async () => {
     const mockFn = jest.fn();
-    const subscription = onEvent('test-event', (arg) => {
-      mockFn(arg);
-    });
 
-    emit('test-event', 1);
+    function source() {
+      onEvent('test-event', (arg) => {
+        mockFn(arg);
+      });
+
+      emit('test-event', 1);
+    }
+
+    await genix.wrap(source).run();
 
     expect(mockFn).toHaveBeenCalledWith(1);
-    subscription.unsubscribe();
   });
 
-  test('events can have more that one handlers associated', () => {
+  test('events can have more that one handlers associated', async () => {
     const mockFn = jest.fn();
 
-    const subscription1 = onEvent('test-event', () => {
-      mockFn();
-    });
+    function source() {
+      onEvent('test-event', () => {
+        mockFn();
+      });
 
-    const subscription2 = onEvent('test-event', () => {
-      mockFn();
-    });
+      onEvent('test-event', () => {
+        mockFn();
+      });
 
-    emit('test-event');
+      emit('test-event');
+    }
+
+    await genix.wrap(source).run();
 
     expect(mockFn).toHaveBeenCalledTimes(2);
-
-    subscription1.unsubscribe();
-    subscription2.unsubscribe();
   });
-  it('should allow map one event to another', () => {
+  it('should allow map one event to another', async () => {
     const event1Handler = jest.fn();
     const event2Handler = jest.fn();
     const arg = 10;
 
-    const eventsMap = {
-      'event-1': 'event-2',
-    };
+    function source() {
+      const eventsMap = {
+        'event-1': 'event-2',
+      };
 
-    const external = () => onEvent('event-2', event2Handler);
-    const internal = () => onEvent('event-1', event1Handler);
+      const external = () => onEvent('event-2', event2Handler);
+      const internal = () => onEvent('event-1', event1Handler);
 
-    const event1Sub = internal();
-    const event2Sub = external();
+      internal();
+      external();
 
-    mapEvents(eventsMap);
+      mapEvents(eventsMap);
 
-    emit('event-1', arg);
+      emit('event-1', arg);
+    }
+
+    await genix.wrap(source).run();
 
     expect(event1Handler).toHaveBeenCalled();
     expect(event2Handler).toHaveBeenCalledWith(arg);
-
-    event1Sub.unsubscribe();
-    event2Sub.unsubscribe();
   });
-  it('should allow map one event to various events', () => {
+  it('should allow map one event to various events', async () => {
     const event1Handler = jest.fn();
     const event2Handler = jest.fn();
     const event3Handler = jest.fn();
     const arg = 10;
 
-    const eventsMap = {
-      'event-1': ['event-2', 'event-3'],
-    };
+    function source() {
+      const eventsMap = {
+        'event-1': ['event-2', 'event-3'],
+      };
 
-    const external2 = () => onEvent('event-2', event2Handler);
-    const external3 = () => onEvent('event-3', event3Handler);
-    const internal = () => onEvent('event-1', event1Handler);
+      const external2 = () => onEvent('event-2', event2Handler);
+      const external3 = () => onEvent('event-3', event3Handler);
+      const internal = () => onEvent('event-1', event1Handler);
 
-    const event1Sub = internal();
-    const event2Sub = external2();
-    const event3Sub = external3();
+      internal();
+      external2();
+      external3();
 
-    mapEvents(eventsMap);
+      mapEvents(eventsMap);
 
-    emit('event-1', arg);
+      emit('event-1', arg);
+    }
+
+    await genix.wrap(source).run();
 
     expect(event1Handler).toHaveBeenCalled();
     expect(event2Handler).toHaveBeenCalledWith(arg);
     expect(event3Handler).toHaveBeenCalledWith(arg);
-
-    event1Sub.unsubscribe();
-    event2Sub.unsubscribe();
-    event3Sub.unsubscribe();
   });
 });
