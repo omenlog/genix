@@ -1,3 +1,4 @@
-import { clearCommands, exec } from './tools';
+import { wrap } from './tools';
 
-export default { clearCommands, exec };
+// eslint-disable-next-line import/prefer-default-export
+export { wrap };

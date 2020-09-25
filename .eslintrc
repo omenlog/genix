@@ -37,6 +37,7 @@
     "require-yield": "off",
     "func-names": "off",
     "no-await-in-loop": "off",
+    "no-restricted-syntax": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "import/extensions": [
       "error",
