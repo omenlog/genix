@@ -1,9 +1,19 @@
 {
   "name": "genix",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "omar.enrique1211@gmail.com",
-  "description": "Experiment about event driven apps using generators as source of events",
-  "main": "index.ts",
+  "description": "Library for build event driven applications",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/omenlog/genix.git"
+  },
+  "bugs": {
+    "url": "https://github.com/omenlog/genix/issues"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "jest",
     "test:coverage": "jest --coverage",
@@ -12,8 +22,11 @@
     "lint": "eslint ."
   },
   "keywords": [
-    "event",
-    "generators"
+    "events",
+    "commands",
+    "decoupling",
+    "domains",
+    "event-driven"
   ],
   "license": "MIT",
   "devDependencies": {
