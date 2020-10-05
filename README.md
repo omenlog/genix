@@ -58,7 +58,7 @@ The main differences between `events` and `commands` are that `genix` only allow
 Examples of commands can be `load-data`, `prepare-order`, `execute-payment`.
 
 ```js
-import { onCommand, command } from 'genix';
+import { onCommand, exec } from 'genix';
 
 function store() {
   const user = {
@@ -75,7 +75,7 @@ function store() {
 }
 
 function app() {
-  const userInfo = command('get-user', 'Bob');
+  const userInfo = exec('get-user', 'Bob');
   console.log(userInfo); // {userId: 1, job: 'Software Developer'}
 }
 
@@ -123,16 +123,16 @@ describe('Counter', () => {
 
     wrapper.exec('increment').exec('increment').exec('get-value');
 
-    const { result } = await wrapper.run();
+    const { data } = await wrapper.run();
 
-    expect(results).toBe(2);
+    expect(data).toBe(2);
   });
 });
 ```
 
 Before continue with more tests a few things should be notice. First as we mention `genix` allow us wrap our functions so we can `exec` commands against it and also `emit` events.
 This operations are lazy in the sense that they are executed when the `run` function is called not before that. The `run` is asynchronous so this has as consequence that every test that use a `genix` wrapper should be an `async` test.
-After executed `run` we got and object that have a `result` property with the return value of the last command executed in our chain of operations for example if we execute this operations `increment`, `state-restored`, `get-value` then `result` will have the return value of `get-value` because it was the last command executed.
+After executed `run` we got and object that have a `data` property with the return value of the last command executed in our chain of operations for example if we execute this operations `increment`, `state-restored`, `get-value` then `data` will have the return value of `get-value` because it was the last command executed.
 Last but not least \*\*functions using `genix` capabilities always should be wrapped in order to be tested, this is highly recommended in order to avoid race conditions and incorrect behaviors during testing.
 Being said this let's write a few more tests:
 
@@ -146,9 +146,8 @@ it('should decrement value correctly', () => {
       .exec('decrement')
       .exec('get-value');
 
-    const { result } = await wrapper.run();
-
-    expect(results).toBe(1);
+    const { data } = await wrapper.run();
+    expect(data).toBe(1);
 });
 
 it('should restore counter value correctly', () => {
@@ -160,12 +159,42 @@ it('should restore counter value correctly', () => {
       .emit('state-restored')
       .exec('get-value');
 
-    const { result } = await wrapper.run();
+    const { data } = await wrapper.run();
 
-    expect(results).toBe(0);
+    expect(data).toBe(0);
 });
 
 ```
+
+### Mocked commands
+
+Sometimes we use a command inside of some handler, for example let's say that in the previous example our handler for `increment` event execute a `get-amount` command that return how much should be increased
+
+```js
+onEvent('increment', () => {
+  const amount = exec('get-amount');
+  value += amount;
+});
+```
+
+In this example our handler depends on `get-amount` command, with `genix` is very simple mock this command in order to test our `increment` handler:
+
+```js
+it('should increment value correctly', async () => {
+  const wrapper = genix.wrap(counter);
+
+  // mocking get-amount response
+  wrapper.onCommand('get-amount', () => 10);
+
+  wrapper.exec('increment').exec('increment').exec('get-value');
+
+  const { data } = await wrapper.run();
+
+  expect(data).toBe(20);
+});
+```
+
+Using the `onCommand` function we are able to set the response to any command used when our wrapper run, this is very util when we have handlers using commands from external dependencies like databases.
 
 This are basic examples but show some of the capabilities of `genix` during testing, there missing parts here as inject fake commands during tests, capture events triggered during function execution. All of this will be covered in a section dedicated to fully cover the testing API in depth.
 
