@@ -33,14 +33,6 @@ function ticker() {
 }
 ```
 
-```js
-const onData = g(function* (data: Buffer) {
-  if (data.toString() === 'r\n') {
-    yield emit('reset');
-  }
-});
-```
-
 Our `main` function will be the entry point of this example:
 
 ```js
