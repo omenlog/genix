@@ -26,14 +26,14 @@ In this example we get `Hello World` printed in response to `world-prepared` eve
 ### Hello World with commands
 
 ```js
-import { onCommand, command } from 'genix';
+import { onCommand, exec } from 'genix';
 
 function setupGreetings() {
   onCommand('get-message', () => 'Hello World');
 }
 
 function main() {
-  const message = command('get-message');
+  const message = exec('get-message');
   console.log(message);
 }
 ```
