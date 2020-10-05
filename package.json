@@ -1,6 +1,6 @@
 {
   "name": "genix",
-  "version": "1.0.0",
+  "version": "1.0.0-1",
   "author": "omar.enrique1211@gmail.com",
   "description": "Library for build event driven applications",
   "main": "dist/index.js",
