@@ -1,9 +1,9 @@
-name: Continuous Deployment
+name: Publish to NPM
 
 on: workflow_dispatch
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,11 +17,6 @@ jobs:
         run: npm install
       - name: Compile
         run: npm run build
-
-  publish:
-    needs: build
-
-    steps:
       - name: Publish package
         uses: JS-DevTools/npm-publish@v1
         with:
