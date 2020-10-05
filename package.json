@@ -22,6 +22,7 @@
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "build": "tsc",
+    "prepublish": "tsc",
     "lint": "eslint ."
   },
   "keywords": [
