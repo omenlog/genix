@@ -1,12 +1,21 @@
 import { onEvent, wrappedEmit } from '../events';
-import { exec as execCommand } from '../commands';
+import { exec as execCommand, onCommand } from '../commands';
 import { isPromise } from '../utils';
-import { WrapperResult } from '../types';
+
+export type WrapperResult = {
+  data: any;
+  events: Record<string, any[]>;
+};
 
 type Wrapper = {
   emit(eventName: string, args?: any): Wrapper;
+  onCommand(commandName: string, handler: Function): Wrapper;
   exec(commandName: string, args?: any): Wrapper;
   run(): Promise<WrapperResult>;
+};
+
+type Config = {
+  commands: Record<string, Function>;
 };
 
 let tasks = Promise.resolve();
@@ -22,12 +31,23 @@ function execWrapper(fn: Function): Promise<WrapperResult> {
   });
 }
 
-function wrap(fn: Function): Wrapper {
+function wrap(fn: Function, config?: Config): Wrapper {
   const operations = [];
   operations.push(() => fn());
+
+  if (config) {
+    for (const [command, handler] of Object.entries(config.commands)) {
+      onCommand(command, handler);
+    }
+  }
+
   return {
     emit(name, ...args) {
       operations.push(() => wrappedEmit(name, ...args));
+      return this;
+    },
+    onCommand(commandName, handler) {
+      onCommand(commandName, handler);
       return this;
     },
     exec(name, ...args) {

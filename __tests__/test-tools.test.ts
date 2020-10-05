@@ -1,4 +1,4 @@
-import genix, { emit, onCommand, onEvent } from '../src';
+import genix, { emit, exec, onCommand, onEvent } from '../src';
 
 describe('Test Tools', () => {
   test('functions can be wrapped in order to execute events and commands against them', async () => {
@@ -68,5 +68,72 @@ describe('Test Tools', () => {
       .run();
 
     expect(data).toBe(5);
+  });
+
+  test('commands can be faked during testing', async () => {
+    function source() {
+      onCommand('test-command', () => {
+        const user = exec('get-user');
+        return user.name;
+      });
+    }
+
+    const wrapper = genix.wrap(source, {
+      commands: {
+        'get-user': () => ({ name: 'Not Important Name' }),
+      },
+    });
+
+    const { data } = await wrapper.exec('test-command').run();
+    expect(data).toBe('Not Important Name');
+  });
+
+  test('async commands can be faked during testing', async () => {
+    function source() {
+      onCommand('test-command', async () => {
+        const user = await exec('get-user');
+        return user.name;
+      });
+    }
+
+    const wrapper = genix.wrap(source, {
+      commands: {
+        'get-user': () => Promise.resolve({ name: 'Not Important Name' }),
+      },
+    });
+
+    const { data } = await wrapper.exec('test-command').run();
+    expect(data).toBe('Not Important Name');
+  });
+
+  test('command can be faked after wrapper creation', async () => {
+    function source() {
+      let userData;
+
+      onEvent('user-ready', async (user) => {
+        userData = user;
+      });
+
+      onCommand('assign-user-id', async () => {
+        const userId = await exec('get-user-id');
+        userData.id = userId;
+      });
+
+      onCommand('get-user-info', (propName) => {
+        return userData[propName];
+      });
+    }
+
+    const wrapper = genix.wrap(source);
+
+    wrapper.onCommand('get-user-id', () => Promise.resolve(123));
+
+    wrapper
+      .emit('user-ready', { name: 'user' })
+      .exec('assign-user-id')
+      .exec('get-user-info', 'id');
+
+    const { data } = await wrapper.run();
+    expect(data).toBe(123);
   });
 });
