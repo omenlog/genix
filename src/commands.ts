@@ -12,7 +12,7 @@ function onCommand(
   commandFn: Function
 ): CommandConfiguration {
   if (commands[commandName] !== undefined) {
-    throw new Error('Not allowed more then one handler per command');
+    throw new Error('Not allowed more than one handler per command');
   } else {
     commands[commandName] = commandFn;
   }
