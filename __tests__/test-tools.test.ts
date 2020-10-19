@@ -6,7 +6,7 @@ describe('Test Tools', () => {
       let value = 0;
 
       onEvent('tick', () => {
-        emit('tick_emitted', value);
+        emit('tick_emitted', value, 10);
         value += 1;
       });
 
@@ -27,7 +27,8 @@ describe('Test Tools', () => {
 
     expect(data).toBe(0);
     expect(events.tick_emitted.length).toBe(2);
-    expect(events.tick_emitted[0]).toBe(0);
+    expect(events.tick_emitted[0][0]).toBe(0);
+    expect(events.tick_emitted[0][1]).toBe(10);
 
     expect(events.reset_emitted).toBeDefined();
   });
@@ -135,5 +136,35 @@ describe('Test Tools', () => {
 
     const { data } = await wrapper.run();
     expect(data).toBe(123);
+  });
+
+  test('fake', async () => {
+    function counter() {
+      const initialValue = exec('getInitialValue');
+      let value = initialValue;
+
+      onEvent('tick', (amount) => {
+        value += amount;
+        emit('valueUpdated', value);
+      });
+
+      onCommand('resetValue', () => {
+        value = initialValue;
+      });
+
+      onCommand('getValue', () => value);
+    }
+    const wrapper = genix.wrap(counter);
+
+    // mocking the getInitialValue command
+    wrapper.onCommand('getInitialValue', () => 10);
+
+    // indicating that getValue will be executed lazily so now there is not execution
+    wrapper.exec('getValue');
+
+    // running our wrapper
+    const { data } = await wrapper.run();
+
+    expect(data).toBe(10);
   });
 });

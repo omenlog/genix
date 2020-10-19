@@ -63,7 +63,7 @@ function wrap(fn: Function, config?: Config): Wrapper {
             events[eventName] = [];
           }
 
-          events[eventName].push(...args);
+          events[eventName].push(args);
         });
 
         const op = operations.reduce((prevOp, nextOp) => {
